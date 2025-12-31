@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  openwrt-builder:
+    build: .
+    container_name: openwrt-builder
+    volumes:
+      - ./firmware:/workspace/firmware
+      - ./openwrt:/workspace/openwrt
+    environment:
+      - TZ=Asia/Shanghai
+    working_dir: /workspace
+    command: /bin/bash -c "cd /workspace && ./scripts/build.sh"
+    stdin_open: true
+    tty: true

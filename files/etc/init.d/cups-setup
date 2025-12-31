@@ -1,0 +1,39 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+start() {
+    # 等待系统完全启动
+    sleep 10
+    
+    # 启动CUPS服务
+    /etc/init.d/cupsd start
+    
+    # 添加HP打印机驱动
+    if [ ! -f /etc/cups/ppd/HP-LaserJet-1020.ppd ]; then
+        echo "添加HP LaserJet 1020驱动..."
+        cp /usr/share/cups/model/HP/hp-laserjet_1020.ppd /etc/cups/ppd/
+    fi
+    
+    # 配置默认打印机（如果有USB打印机连接）
+    if lsusb | grep -q "HP.*LaserJet"; then
+        echo "检测到HP LaserJet打印机，自动配置..."
+        lpadmin -p HP-LaserJet-1020 -E -v usb://HP/LaserJet%201020 -P /etc/cups/ppd/HP-LaserJet-1020.ppd
+        lpadmin -d HP-LaserJet-1020
+    fi
+    
+    # 设置CUPS管理员
+    echo "admin" | lppasswd -g sys -a admin
+    
+    echo "CUPS打印服务配置完成"
+}
+
+stop() {
+    /etc/init.d/cupsd stop
+}
+
+restart() {
+    stop
+    start
+}

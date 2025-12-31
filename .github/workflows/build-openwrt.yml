@@ -1,0 +1,81 @@
+name: Build OpenWrt for TL-WR842N v3
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential ccache ecj fastjar file g++ gawk \
+          gettext git java-propose-classpath libelf-dev libncurses5-dev \
+          libncursesw5-dev libssl-dev python python2.7-dev python3 unzip wget \
+          python3-distutils python3-setuptools python3-dev rsync subversion \
+          swig time xsltproc zlib1g-dev
+        
+    - name: Clone OpenWrt source
+      run: |
+        git clone --depth=1 https://github.com/openwrt/openwrt.git openwrt
+        cd openwrt
+        git checkout openwrt-22.03
+        
+    - name: Update and install feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        
+    - name: Copy custom config
+      run: |
+        cp $GITHUB_WORKSPACE/configs/wr842n-v3.config openwrt/.config
+        
+    - name: Download custom packages
+      run: |
+        cd openwrt
+        # 下载中文语言包
+        git clone https://github.com/project-openwrt/luci-app-cupsd.git package/luci-app-cupsd
+        # 下载foo2xqx驱动
+        git clone https://github.com/kanhoo/foo2zjs-openwrt.git package/foo2zjs
+        
+    - name: Configure build
+      run: |
+        cd openwrt
+        make defconfig
+        
+    - name: Build firmware
+      run: |
+        cd openwrt
+        make -j$(nproc) V=s
+        
+    - name: Copy firmware files
+      run: |
+        mkdir -p $GITHUB_WORKSPACE/firmware
+        cp openwrt/bin/targets/ar71xx/generic/*.bin $GITHUB_WORKSPACE/firmware/
+        
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: firmware/*.bin
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload firmware artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: openwrt-firmware
+        path: firmware/*.bin
+        retention-days: 30

@@ -1,0 +1,5 @@
+# 每天凌晨3点重启路由器
+0 3 * * * /sbin/reboot
+
+# 每周一凌晨4点清理日志
+0 4 * * 1 /usr/sbin/logread > /tmp/log_backup.txt && echo "" > /var/log/messages
