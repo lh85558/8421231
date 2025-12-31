@@ -26,7 +26,7 @@ jobs:
         
     - name: Clone OpenWrt source
       run: |
-        git clone --depth=1 https://gitcode.com/lh85558/openwrt.git openwrt
+        git clone --depth=1 --branch openwrt-22.03 https://gitcode.com/lh85558/openwrt.git openwrt
         cd openwrt 
         git checkout openwrt-22.03
         
