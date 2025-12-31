@@ -56,7 +56,7 @@ jobs:
     - name: Build firmware
       run: |
         cd openwrt
-        make -j$(nproc) V=s
+        make -j2 --quiet
         
     - name: Copy firmware files
       run: |
