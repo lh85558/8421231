@@ -27,7 +27,7 @@ jobs:
     - name: Clone OpenWrt source
       run: |
         git clone --depth=1 https://gitcode.com/lh85558/openwrt.git openwrt
-        cd openwrt
+        cd openwrt 
         git checkout openwrt-22.03
         
     - name: Update and install feeds
